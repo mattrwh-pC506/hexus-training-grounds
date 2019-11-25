@@ -30,3 +30,16 @@ def get_board_config(name):
     board = cursor.fetchone()
     cursor.close()
     return board
+
+
+class QTable:
+    def get(self, key):
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM qtable WHERE key=:key", {"key": key})
+        res = cursor.fetchone()
+        if res: return res[1]
+        else: return None 
+
+    def set(self, key, weight):
+        update_qtable(key, weight)
+        

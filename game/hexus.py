@@ -64,17 +64,35 @@ class Tile:
             neighbor.weight = (weight + 1)
     
     @property
-    def NE(self): return self.game.board.get(f'{self.x + 6},{self.y + 9}')
+    def NE(self): 
+        tile = self.game.board.get(f'{self.x + 6},{self.y + 9}')
+        if tile and tile.team != 'X': return tile 
+        else: return None
     @property
-    def NW(self): return self.game.board.get(f'{self.x - 6},{self.y + 9}')
+    def NW(self): 
+        tile = self.game.board.get(f'{self.x - 6},{self.y + 9}')
+        if tile and tile.team != 'X': return tile 
+        else: return None
     @property
-    def SE(self): return self.game.board.get(f'{self.x + 6},{self.y - 9}')
+    def SE(self):  
+        tile = self.game.board.get(f'{self.x + 6},{self.y - 9}')
+        if tile and tile.team != 'X': return tile 
+        else: return None
     @property
-    def SW(self): return self.game.board.get(f'{self.x - 6},{self.y - 9}')
+    def SW(self):  
+        tile = self.game.board.get(f'{self.x - 6},{self.y - 9}')
+        if tile and tile.team != 'X': return tile 
+        else: return None
     @property
-    def E(self): return self.game.board.get(f'{self.x + 12},{self.y}')
+    def E(self):  
+        tile = self.game.board.get(f'{self.x + 12},{self.y}')
+        if tile and tile.team != 'X': return tile 
+        else: return None
     @property
-    def W(self): return self.game.board.get(f'{self.x - 12},{self.y}')
+    def W(self):  
+        tile = self.game.board.get(f'{self.x - 12},{self.y}')
+        if tile and tile.team != 'X': return tile 
+        else: return None 
 
     def clear_weights(self):
         self._weight = sys.maxsize
@@ -100,7 +118,6 @@ class Hexus(Game):
     def build_default_board(self):
         config = get_board_config(self.board_level)
         board_team_array = config[1]
-        print (board_team_array, board_team_array.index("O"))
         board_width = board_team_array.index("O") + 1
         board_height = 9 
         board = {}
@@ -121,10 +138,8 @@ class Hexus(Game):
             if (is_odd_row and i_within_set != board_width) or (is_even_row and i_within_set != 0):
                 current_x += 12
             else:
-                print (i, is_even_row, is_odd_row)
                 current_y -= 9 
                 current_x = odd_row_x_starting_position if is_even_row else even_row_x_starting_position
-        print ([(x.team, x.x, x.y, x.units) for x in board.values()])
         return board
 
     def reset(self):
@@ -188,7 +203,7 @@ class Hexus(Game):
         leftover_units = self.get_all_units()
         ratio_spent = leftover_units / self.round_starting_units
         # print (ratio_spent, leftover_units, self.round_starting_units)
-        if ratio_spent < 0.4: 
+        if ratio_spent < 0.1: 
             self.next_round()
         return self.is_win() 
 

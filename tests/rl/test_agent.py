@@ -28,7 +28,7 @@ class TestAgent(unittest.TestCase):
         """Test qvalue to init to 0 if not present and return value else wise."""
         state = '---------'
         self.assertEqual(0.0, self.agent.qvalue(state))
-        self.agent.qtable[state] = 1.0
+        self.agent.qtable.set(state, 1.0)
         self.assertEqual(1.0, self.agent.qvalue(state))
 
     def test_argmax(self):

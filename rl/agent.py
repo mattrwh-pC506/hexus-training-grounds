@@ -8,12 +8,12 @@ import datetime
 import json
 import sys
 from game.hexus import Hexus 
-from game.qtable import update_qtable, begin_transaction, end_transaction
+from game.qtable import update_qtable, begin_transaction, end_transaction, QTable
 
 
 class Agent(object):
     """Agent is the reinforcement learning agent that learns optimal state action pairs."""
-    def __init__(self, Game, qtable=dict(), player='B', learning_rate=5e-1, discount=9e-1, epsilon=8e-1, board_level="#EB00A2"):
+    def __init__(self, Game, qtable=QTable(), player='B', learning_rate=5e-1, discount=9e-1, epsilon=8e-1, board_level="#EB00A2"):
         """Initialize agent with properties
 
         - qtable is json table with Q values Q(s,a)
@@ -33,10 +33,9 @@ class Agent(object):
 
     def qvalue(self, state):
         """Retrieve value from qtable or initialize if not found."""
-        if state not in self.qtable:
-            # Initialize Q-value at 0
-            self.qtable[state] = 0.0
-        return self.qtable[state]
+        if not self.qtable.get(state):
+            self.qtable.set(state, 0.0)
+        return self.qtable.get(state)
 
     def argmax(self, values):
         """Returns index of max value."""
@@ -148,8 +147,7 @@ class Agent(object):
             i = self.optimal_next(future_states, game)
             future_val = self.qvalue(future_states[i])
         # Q-value update
-        self.qtable[state] = ((1 - self.learning_rate) * self.qvalue(state)) + (self.learning_rate * (reward + self.discount * future_val))
-        update_qtable(state, self.qtable[state])
+        self.qtable.set(state, ((1 - self.learning_rate) * self.qvalue(state)) + (self.learning_rate * (reward + self.discount * future_val)))
 
     def train(self, episodes, history=[]):
         """Trains by playing against self.
@@ -158,18 +156,14 @@ class Agent(object):
         """
         x = range(episodes)
         cumulative_reward = []
-        memory = []
 
         total_reward = 0.0
         for i in range(episodes):
-            # total_reward = _thread.start_new_thread(self.play_game, (i, total_reward))
+            #total_reward = _thread.start_new_thread(self.play_game, (i, total_reward))
             total_reward = self.play_game(i, total_reward)
-            memory.append(float(sys.getsizeof(self.qtable) / 1024))
             cumulative_reward.append(total_reward)
 
         history.append(x)
-        history.append(cumulative_reward)
-        history.append(memory)
         return history
 
     def play_game(self, episode, total_reward):

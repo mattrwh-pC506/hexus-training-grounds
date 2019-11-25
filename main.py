@@ -66,7 +66,7 @@ def play_hexus(mode, episodes, board_level):
         learning_rates = [1e-1, 2e-1, 3e-1, 25e-2, 9e-2]
         for epsilon in epsilons:
             for learning_rate in learning_rates:
-                agent = Agent(Hexus, qtable={}, player='B', epsilon=epsilon, learning_rate=learning_rate)
+                agent = Agent(Hexus, player='B', epsilon=epsilon, learning_rate=learning_rate)
                 n = 10000
                 history = agent.train(n, history=[])
                 total = history[1][len(history[1]) - 1]
@@ -89,8 +89,7 @@ def main():
     if options.game == 'hexus':
         play_hexus(options.mode, int(options.episodes), options.board_level)
     else:
-        print('Game choice {} is current unsupported.'
-              .format(options.game))
+        print('Game choice {} is current unsupported.'.format(options.game))
         sys.exit(1)
 
 
