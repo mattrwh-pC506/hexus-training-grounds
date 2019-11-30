@@ -1,3 +1,4 @@
+import time
 import math
 from .game import Game
 from .qtable import load_board_configs_to_db_from_json, get_board_config, begin_transaction, new_transaction
@@ -60,8 +61,12 @@ class Tile:
             self.pulse_weights(w) 
     
     def pulse_weights(self, weight=0):
-        for neighbor in [n for n in self.get_neighbors() if n.team == self.team]:
-            neighbor.weight = (weight + 1)
+        self.get_neighbors()
+        for neighbor in self.get_neighbors():
+            if neighbor.team != self.game.player:
+                neighbor.weight = 0
+            else:
+                neighbor.weight = (weight + 1)
     
     @property
     def NE(self): 
@@ -152,7 +157,7 @@ class Hexus(Game):
         states = []
         all_tiles = self.get_all_tiles()
         team_tiles = self.get_all_team_tiles(all_tiles)
-        for tile in team_tiles:
+        for i, tile in enumerate(team_tiles):
             if tile.units > 0: 
                 valid_move_tiles = tile.get_neighbors()
                 for move in valid_move_tiles: 
@@ -196,6 +201,7 @@ class Hexus(Game):
         return team_to_check
 
     def make_move(self, move):
+        #self.print_board()
         move_source_tile, move_target_tile = move
         source_tile = self.board.get(self.build_lookup_key(move_source_tile))
         target_tile = self.board.get(self.build_lookup_key(move_target_tile))
@@ -203,8 +209,12 @@ class Hexus(Game):
         leftover_units = self.get_all_units()
         ratio_spent = leftover_units / self.round_starting_units
         # print (ratio_spent, leftover_units, self.round_starting_units)
-        if ratio_spent < 0.1: 
+        #if ratio_spent < 0.1: 
+        #    self.next_round()
+        if leftover_units == 0:
             self.next_round()
+        #self.print_board()
+        #time.sleep(10)
         return self.is_win() 
 
     def next_round(self):
@@ -258,3 +268,36 @@ class Hexus(Game):
             return -1.0
         else:
             return 0
+
+
+    def print_board(self):
+        config = get_board_config(self.board_level)
+        board_team_array = config[1]
+        board_width = board_team_array.index("O") + 1
+        board_height = 9 
+        odd_row_x_starting_position = (-1 * (board_width / 2 if board_width % 2 == 0 else (board_width - 1) / 2)) * 12
+        even_row_x_starting_position = odd_row_x_starting_position + 6
+        y_starting_position = (board_height / 2 if board_height % 2 == 0 else (board_height - 1) / 2) * 9
+        current_x = odd_row_x_starting_position
+        current_y = y_starting_position
+        str_board = ''
+        for i, team in enumerate(board_team_array):
+            i += 1
+            tile = None 
+            if team != 'X':
+                tile = self.board.get(f"{current_x},{current_y}")
+                str_board += f"[{tile.team}:{tile.weight if tile.weight < 100 else 'X'}:{tile.units}]"
+            
+            row_set_width = board_width + (board_width - 1)
+            i_within_set = i % row_set_width
+            is_odd_row = i_within_set != 0 and i_within_set <= board_width 
+            is_even_row = not is_odd_row 
+            if (is_odd_row and i_within_set != board_width) or (is_even_row and i_within_set != 0):
+                current_x += 12
+            else:
+                current_y -= 9 
+                current_x = odd_row_x_starting_position if is_even_row else even_row_x_starting_position
+                str_board += "\n"
+                if is_odd_row:
+                    str_board += "   "
+        print (str_board)

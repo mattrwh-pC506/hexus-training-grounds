@@ -8,7 +8,7 @@ import datetime
 import json
 import sys
 from game.hexus import Hexus 
-from game.qtable import update_qtable, begin_transaction, end_transaction, QTable
+from game.qtable import end_transaction, QTable
 
 
 class Agent(object):
@@ -87,18 +87,22 @@ class Agent(object):
         # Exploit
         i = self.optimal_next(states, game)
         randolorian = np.random.random_sample()
-        if randolorian < self.epsilon:
+        #if randolorian < self.epsilon:
+        if True:
             if game.player == self.player: 
-                attacking_actions = [index for index, action in enumerate(actions) if action[0].team == self.player and action[0].team != action[1].team]
                 self.clear_move_weights_of_tiles(actions)
-                self.add_move_weights_to_tiles(actions, 1)
-                sorted_actions_by_weight = sorted(actions, key=lambda a: a[0].weight, reverse=True)
+                frontline_actions = [action for action in actions if action[0].team == self.player and action[0].team != action[1].team]
+                self.add_move_weights_to_tiles(frontline_actions, 0)
+                player_actions = [a for a in actions if a[0].team == self.player]
+                sorted_actions_by_weight = sorted(player_actions, key=lambda a: a[0].weight, reverse=True)
                 filtered_actions_by_direction = [a for a in sorted_actions_by_weight if a[0].weight - a[1].weight >= 0]
-                actions_with_viable_moves = [a[0].weight for a in filtered_actions_by_direction if a[0].units > 0]
+                actions_with_viable_moves = [a[0].weight for a in filtered_actions_by_direction if (a[0].units > 0 and a[1].units == 0 and a[1].team != self.player) or (a[0].units > 0 and a[1].units != 0 and a[1].team == self.player) or (a[0].units > 0 and a[0].weight == 1 and a[1].team != self.player)]
                 if len(actions_with_viable_moves) > 0:
                     max_weight_with_units = max(actions_with_viable_moves)
                     filtered_actions_by_highest_weight = [a for a in filtered_actions_by_direction if a[0].weight == max_weight_with_units]
-                    best_action = filtered_actions_by_highest_weight[np.random.randint(0, len(filtered_actions_by_highest_weight))]
+                    filtered_attack_actions = [action for action in filtered_actions_by_highest_weight if action[1].team != self.player]
+                    actions_to_use = filtered_attack_actions if len(filtered_attack_actions) > 0 else filtered_actions_by_highest_weight
+                    best_action = actions_to_use[np.random.randint(0, len(actions_to_use))]
                     i = actions.index(best_action)
                 else:
                     i = np.random.randint(0, len(states))
